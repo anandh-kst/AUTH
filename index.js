@@ -12,7 +12,9 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 app.use("/api/user",userRouter)
-
+app.get("/", (req, res) => {
+    res.send("Health App Server is running")
+})
 const PORT = process.env.PORT || 3002
 mongoose.connect(process.env.MONGO_URL, {
     dbName: process.env.DB_NAME,
