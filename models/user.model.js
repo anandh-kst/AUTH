@@ -40,6 +40,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+     profileScore: {
+      type: Number,
+      default: 0, 
+    },
   },
   {
     timestamps: true,

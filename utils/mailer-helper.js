@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 dotenv.config();
 
 export const generateOtp = () => {
@@ -32,8 +33,6 @@ export const otpTemplate = (otp) => `
     </div>
   </div>
 `;
-
-import nodemailer from "nodemailer";
 
 export const transporter = nodemailer.createTransport({
   service: "gmail",

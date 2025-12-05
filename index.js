@@ -11,6 +11,7 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+
 app.use("/api/user",userRouter)
 app.get("/", (req, res) => {
     res.send("Health App Server is running")

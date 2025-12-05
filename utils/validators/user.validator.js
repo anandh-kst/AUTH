@@ -1,6 +1,6 @@
 import Joi from "joi";
 
-export const updateUserValidation = Joi.object({
+export const userValidation = Joi.object({
   firstName: Joi.string().min(2).max(50).optional(),
   lastName: Joi.string().min(2).max(50).optional(),
   dateOfBirth: Joi.date().optional(),
@@ -10,6 +10,5 @@ export const updateUserValidation = Joi.object({
   email: Joi.string().email().optional(),
   gender: Joi.string().valid("male", "female", "other").optional(),
   bloodGroup: Joi.string().optional(),
-  profileImage: Joi.string().optional(),
   password: Joi.string().min(6).optional()
 });
