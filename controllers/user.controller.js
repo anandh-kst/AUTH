@@ -261,7 +261,7 @@ export default {
       if (error) {
         return res.status(400).json({
           status: "error",
-          message: error.details[0].message,
+          message: "Invalid credentials",
         });
       }
       const validatedData = { ...value };
