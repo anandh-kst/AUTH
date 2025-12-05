@@ -1,6 +1,5 @@
 import bcrypt from "bcrypt";
-import User from "../models/user.model.js";
-import { userValidation } from "../utils/validators/user.validator.js";
+import { profileValidation } from "../utils/validators/user.validator.js";
 import Otp from "../models/otp.model.js";
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
@@ -12,12 +11,14 @@ import {
   transporter,
 } from "../utils/mailer-helper.js";
 import { calculateProfileScore, isValid } from "../utils/profile-helper.js";
+import Identity from "../models/identity.model.js";
+import Profile from "../models/profile.model.js";
 
 export default {
   register: async (req, res) => {
     try {
       const { userToken, ...body } = req.body;
-      const { error, value } = userValidation.validate(body);
+      const { error, value } = profileValidation.validate(body);
       if (error) {
         return res.status(400).json({
           success: "error",
@@ -29,98 +30,135 @@ export default {
         "_id",
         "createdAt",
         "updatedAt",
-        "profileImage",
         "profileScore",
+        "identityId",
       ];
       BLOCKED_FIELDS.forEach((field) => delete updateData[field]);
-      if (updateData.password) {
-        updateData.password = await bcrypt.hash(updateData.password, 10);
-      }
       if (req.file) {
         const result = await new Promise((resolve, reject) => {
-          const upload_stream = cloudinary.uploader.upload_stream(
+          const uploadStream = cloudinary.uploader.upload_stream(
             { folder: "users" },
             (error, result) => {
               if (error) reject(error);
               else resolve(result);
             }
           );
-          streamifier.createReadStream(req.file.buffer).pipe(upload_stream);
+          streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
         });
-
         updateData.profileImage = result.secure_url;
       }
-      const profileScore = calculateProfileScore(updateData);
-      updateData.profileScore = profileScore;
 
-      let user;
       if (isValid(userToken)) {
         const { id } = jwt.verify(userToken, process.env.JWT_SECRET);
-        user = await User.findByIdAndUpdate(
-          id,
-          { $set: updateData },
-          { new: true, runValidators: true }
-        ).select("-password");
 
-        if (!user) {
+        const identityUser = await Identity.findById(id);
+        if (!identityUser) {
           return res.status(404).json({
             success: "error",
-            message: "User not found",
+            message: "Invalid user token",
           });
         }
+        if (updateData.email) delete updateData.email;
+        await identityUser.save();
+
+        let userProfile = await Profile.findOne({ identityId: id });
+        if (!userProfile) {
+          userProfile = new Profile({ identityId: id });
+        }
+        const allowedFields = [
+          "firstName",
+          "lastName",
+          "email",
+          "age",
+          "dob",
+          "gender",
+          "phoneNumber",
+          "address1",
+          "address2",
+          "city",
+          "state",
+          "pincode",
+          "bloodGroup",
+          "profileImage",
+          "pan",
+          "adhaar",
+        ];
+
+        Object.keys(updateData).forEach((key) => {
+          if (!allowedFields.includes(key)) {
+            delete updateData[key];
+          }
+        });
+        Object.assign(userProfile, updateData);
+        userProfile.lastModifiedBy = identityUser.email;
+        userProfile.profileScore = calculateProfileScore(userProfile);
+        await userProfile.save();
 
         return res.status(200).json({
           success: "success",
           message: "User updated successfully",
-          data: user,
         });
       }
-
-      if (updateData.email) {
-        const isUserExits = await User.findOne({ email: updateData.email });
-        if (isValid(isUserExits)) {
-          return res.status(400).json({
-            success: "error",
-            message: "This email already Registered",
-          });
-        }
-      }
-      user = await User.create(updateData);
-      if (!user) {
+      if (!updateData.email || !updateData.password) {
         return res.status(400).json({
           success: "error",
-          message: "User not created",
+          message: "Email and password are required",
         });
       }
-      const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+      let exists = await Identity.findOne({ email: updateData.email });
+      if (exists) {
+        return res.status(400).json({
+          success: "error",
+          message: "This email already exists",
+        });
+      }
+      const identityData = {
+        email: updateData.email,
+        password: await bcrypt.hash(updateData.password, 10),
+      };
+
+      const identity = await Identity.create(identityData);
+      const userProfile = await Profile.create({
+        identityId: identity._id,
+        createdBy: updateData.email,
+        lastModifiedBy: updateData.email,
+        ...updateData,
+        profileScore: calculateProfileScore(updateData),
+      });
+      if (!userProfile)
+        return res
+          .status(500)
+          .json({ success: "error", message: "User not created" });
+
+      const token = jwt.sign({ id: identity._id }, process.env.JWT_SECRET, {
         expiresIn: "1d",
       });
       return res.status(201).json({
         success: "success",
         message: "User created successfully",
-        data: { token: token },
+        data: { userToken: token },
       });
     } catch (err) {
       console.error("Save/Update error:", err);
-      // check jwterror
+
       if (err.name === "JsonWebTokenError") {
-        return res.status(401).json({
-          success: "error",
-          message: "Invalid token",
-        });
+        return res
+          .status(401)
+          .json({ success: "error", message: "Invalid token" });
       }
       if (err.name === "TokenExpiredError") {
-        return res.status(401).json({
-          success: "error",
-          message: "Token expired",
-        });
+        return res
+          .status(401)
+          .json({ success: "error", message: "Token expired" });
       }
+
       return res.status(500).json({
         success: "error",
         message: "Internal server error",
       });
     }
   },
+
   sendOtp: async (req, res) => {
     try {
       const { email } = req.body;
@@ -130,7 +168,7 @@ export default {
           .status(400)
           .json({ status: "error", message: "Email is required" });
 
-      const user = await User.findOne({ email });
+      const user = await Identity.findOne({ email });
       if (user)
         return res
           .status(404)
@@ -209,7 +247,7 @@ export default {
           status: "error",
           message: "Email and password are required",
         });
-      const { error, value } = userValidation.validate({ email, password });
+      const { error, value } = profileValidation.validate({ email, password });
       if (error) {
         return res.status(400).json({
           status: "error",
@@ -217,7 +255,7 @@ export default {
         });
       }
       const validatedData = { ...value };
-      const user = await User.findOne({ email: validatedData.email });
+      const user = await Identity.findOne({ email: validatedData.email });
       if (!user)
         return res
           .status(404)
@@ -243,7 +281,7 @@ export default {
       return res.status(200).json({
         status: "success",
         message: "Login successful",
-        data: { token },
+        data: { userToken: token },
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -261,7 +299,8 @@ export default {
           .status(401)
           .json({ status: "error", message: "Unauthorized" });
       }
-      const user = await User.findById(decoded.id).select("-password");
+      console.log(decoded);
+      const user = await Profile.findOne({ identityId: decoded.id });
       if (!user) {
         return res
           .status(404)

@@ -27,12 +27,7 @@ const userSchema = new mongoose.Schema(
     gender: {
       type: String,
     },
-    profileImage: {
-      type: String,
-    },
-    bloodGroup: {
-      type: String,
-    },
+    
     password: {
       type: String,
     },
