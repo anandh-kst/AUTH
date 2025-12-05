@@ -11,12 +11,12 @@ import {
   otpTemplate,
   transporter,
 } from "../utils/mailer-helper.js";
-import { calculateProfileScore } from "../utils/profile-helper.js";
+import { calculateProfileScore, isValid } from "../utils/profile-helper.js";
 
 export default {
   register: async (req, res) => {
     try {
-      const { userId, ...body } = req.body;
+      const { userToken, ...body } = req.body;
       const { error, value } = userValidation.validate(body);
       if (error) {
         return res.status(400).json({
@@ -54,9 +54,10 @@ export default {
       updateData.profileScore = profileScore;
 
       let user;
-      if (userId) {
+      if (isValid(userToken)) {
+        const { id } = jwt.verify(userToken, process.env.JWT_SECRET);
         user = await User.findByIdAndUpdate(
-          userId,
+          id,
           { $set: updateData },
           { new: true, runValidators: true }
         ).select("-password");
@@ -77,7 +78,7 @@ export default {
 
       if (updateData.email) {
         const isUserExits = await User.findOne({ email: updateData.email });
-        if (isUserExits) {
+        if (isValid(isUserExits)) {
           return res.status(400).json({
             success: "error",
             message: "This email already Registered",
@@ -85,14 +86,35 @@ export default {
         }
       }
       user = await User.create(updateData);
-
+      if (!user) {
+        return res.status(400).json({
+          success: "error",
+          message: "User not created",
+        });
+      }
+      const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+        expiresIn: "1d",
+      });
       return res.status(201).json({
         success: "success",
         message: "User created successfully",
-        data: user,
+        data: { token: token },
       });
     } catch (err) {
       console.error("Save/Update error:", err);
+      // check jwterror
+      if (err.name === "JsonWebTokenError") {
+        return res.status(401).json({
+          success: "error",
+          message: "Invalid token",
+        });
+      }
+      if (err.name === "TokenExpiredError") {
+        return res.status(401).json({
+          success: "error",
+          message: "Token expired",
+        });
+      }
       return res.status(500).json({
         success: "error",
         message: "Internal server error",
