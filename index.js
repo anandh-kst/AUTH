@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import userRouter from './routes/user.route.js'
+import dataRouter from './routes/data.route.js'
 dotenv.config()
 
 const app = express()
@@ -13,6 +14,7 @@ app.use(express.urlencoded({ extended: true }))
 
 
 app.use("/api/user",userRouter)
+app.use("/api/data",dataRouter)
 app.get("/", (req, res) => {
     res.send("Health App Server is running")
 })

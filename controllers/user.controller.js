@@ -14,6 +14,7 @@ import { calculateProfileScore, isValid } from "../utils/profile-helper.js";
 import Identity from "../models/identity.model.js";
 import Profile from "../models/profile.model.js";
 
+
 export default {
   register: async (req, res) => {
     try {
@@ -136,9 +137,7 @@ export default {
         from: `"Health App" <${process.env.MAIL_USER}>`,
         to: updateData.email,
         subject: "Welcome to Health APP",
-        html: welcomeEmailTemplate(
-          `${userProfile.email}`,
-        ),
+        html: welcomeEmailTemplate(`${userProfile.email}`),
       });
 
       const token = jwt.sign({ id: identity._id }, process.env.JWT_SECRET, {
