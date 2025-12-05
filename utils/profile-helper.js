@@ -15,27 +15,38 @@ export const isValid = (value) => {
   }
   return false;
 };
-
 export const calculateProfileScore = (user) => {
   const fields = [
     "firstName",
     "lastName",
-    "dateOfBirth",
-    "age",
-    "phoneNumber",
-    "address",
     "email",
+    "age",
+    "dob",
     "gender",
+    "phoneNumber",
     "profileImage",
     "bloodGroup",
+    "adhaar",
+    "pan",
+    "address1",
+    "address2",
+    "city",
+    "state",
+    "pincode",
   ];
+
+  const isValid = (value) => {
+    if (value === null || value === undefined) return false;
+    if (typeof value === "string" && value.trim() === "") return false;
+    return true;
+  };
 
   let completed = 0;
 
   fields.forEach((field) => {
-    if (isValid(user[field])) {
-      completed++;
-    }
+    if (isValid(user[field])) completed++;
   });
+
   return Math.round((completed / fields.length) * 100);
 };
+

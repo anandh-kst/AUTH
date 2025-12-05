@@ -4,7 +4,6 @@ import Otp from "../models/otp.model.js";
 import cloudinary from "../config/cloudinary.js";
 import streamifier from "streamifier";
 import jwt from "jsonwebtoken";
-
 import {
   generateOtp,
   otpTemplate,
