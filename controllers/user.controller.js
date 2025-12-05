@@ -8,6 +8,7 @@ import {
   generateOtp,
   otpTemplate,
   transporter,
+  welcomeEmailTemplate,
 } from "../utils/mailer-helper.js";
 import { calculateProfileScore, isValid } from "../utils/profile-helper.js";
 import Identity from "../models/identity.model.js";
@@ -114,6 +115,8 @@ export default {
       const identityData = {
         email: updateData.email,
         password: await bcrypt.hash(updateData.password, 10),
+        createdBy: updateData.email,
+        lastModifiedBy: updateData.email,
       };
 
       const identity = await Identity.create(identityData);
@@ -128,6 +131,15 @@ export default {
         return res
           .status(500)
           .json({ success: "error", message: "User not created" });
+
+      await transporter.sendMail({
+        from: `"Health App" <${process.env.MAIL_USER}>`,
+        to: updateData.email,
+        subject: "Welcome to Health APP",
+        html: welcomeEmailTemplate(
+          `${userProfile.email}`,
+        ),
+      });
 
       const token = jwt.sign({ id: identity._id }, process.env.JWT_SECRET, {
         expiresIn: "1d",
@@ -157,7 +169,6 @@ export default {
       });
     }
   },
-
   sendOtp: async (req, res) => {
     try {
       const { email } = req.body;

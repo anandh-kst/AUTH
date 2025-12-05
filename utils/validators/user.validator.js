@@ -27,4 +27,5 @@ export const profileValidation = Joi.object({
   pincode: Joi.number().integer().min(100000).max(999999).optional(),
   profileImage: Joi.string().uri().optional(),
   userToken: Joi.string().optional(),
+  isNewUser: Joi.boolean().optional(),
 });

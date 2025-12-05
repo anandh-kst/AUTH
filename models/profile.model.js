@@ -20,6 +20,8 @@ const profileSchema = new mongoose.Schema(
     },
     profileImage: {
       type: String,
+      default:
+        "https://img.freepik.com/premium-vector/user-profile-icon-circle_1256048-12499.jpg?semt=ais_hybrid&w=740&q=80",
     },
     bloodGroup: {
       type: String,
@@ -35,7 +37,7 @@ const profileSchema = new mongoose.Schema(
     city: { type: String, trim: true },
     state: { type: String, trim: true },
     pincode: { type: Number },
-
+    isNewUser: { type: Boolean, default: true },
     createdBy: { type: String, default: null },
     lastModifiedBy: { type: String, default: null },
   },
