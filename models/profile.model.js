@@ -13,7 +13,7 @@ const profileSchema = new mongoose.Schema(
     firstName: { type: String, trim: true },
     lastName: { type: String, trim: true },
     age: { type: Number },
-    dob: { type: Date },
+    dob: { type: String },
     gender: { type: String, trim: true },
     phoneNumber: {
       type: String,

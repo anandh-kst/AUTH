@@ -14,12 +14,14 @@ import { calculateProfileScore, isValid } from "../utils/profile-helper.js";
 import Identity from "../models/identity.model.js";
 import Profile from "../models/profile.model.js";
 
-
 export default {
   register: async (req, res) => {
     try {
       const { userToken, ...body } = req.body;
-      const { error, value } = profileValidation.validate(body);
+      const { error, value } = profileValidation.validate(body, {
+        abortEarly: false,
+        errors: { wrap: { label: "" } },
+      });
       if (error) {
         return res.status(400).json({
           success: "error",
