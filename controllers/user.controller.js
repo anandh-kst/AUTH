@@ -344,17 +344,7 @@ export default {
             password: "Password is required",
           },
         });
-      const { error, value } = profileValidation.validate({ email, password });
-      if (error) {
-        return res.status(400).json({
-          status: "error",
-          message: "Invalid credentials",
-          code: "INVALID_DATA",
-          details: error.details,
-        });
-      }
-      const validatedData = { ...value };
-      const user = await Identity.findOne({ email: validatedData.email });
+      const user = await Identity.findOne({ email: email });
       if (!user)
         return res.status(404).json({
           status: "error",
@@ -370,10 +360,7 @@ export default {
           details: null,
         });
       }
-      const isPasswordValid = await bcrypt.compare(
-        validatedData.password,
-        user.password
-      );
+      const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid)
         return res.status(400).json({
           status: "error",
@@ -414,18 +401,29 @@ export default {
         });
       }
 
-      const { email } = req.body;
-      if (!email) {
+      const { email, password } = req.body;
+      if (!email || !password) {
         return res.status(400).json({
           success: "error",
           message: "Email is required",
           code: "FIELD_REQUIRED",
           details: {
             email: "Email is required",
+            password: "Password is required",
           },
         });
       }
-      const userIdentity = await Identity.findOne({ email });
+      const { error, value } = profileValidation.validate({ email, password });
+      if (error) {
+        return res.status(400).json({
+          success: "error",
+          message: error.details[0].message,
+          code: "INVALID_DATA",
+          details: error.details,
+        });
+      }
+      const updatedDate = { ...value };
+      const userIdentity = await Identity.findOne({ email: updatedDate.email });
       if (!email) {
         return res.status(404).json({
           success: "error",
@@ -434,7 +432,7 @@ export default {
           details: null,
         });
       }
-      const record = await Otp.findOne({ email }).sort({ createdAt: -1 });
+      const record = await Otp.findOne({ email: updatedDate.email }).sort({ createdAt: -1 });
       if (!record || !record.verified) {
         return res.status(400).json({
           success: "error",
@@ -444,7 +442,7 @@ export default {
         });
       }
       const userUpdate = await Identity.findByIdAndUpdate(userIdentity._id, {
-        password: await bcrypt.hash(req.body.password, 10),
+        password: await bcrypt.hash(updatedDate.password, 10),
       });
       if (!userUpdate)
         return res.status(404).json({
