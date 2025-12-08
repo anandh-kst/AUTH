@@ -377,7 +377,7 @@ export default {
       if (!isPasswordValid)
         return res.status(400).json({
           status: "error",
-          message: "Invalid password",
+          message: "Invalid credentials",
           code: "INVALID_DATA",
           details: null,
         });
