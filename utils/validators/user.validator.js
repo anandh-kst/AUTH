@@ -34,14 +34,6 @@ export const profileValidation = Joi.object({
       "string.empty": "Date of birth cannot be empty",
       "string.pattern.base": "Date of birth must be in YYYY-MM-DD format.",
     }),
-
-  age: Joi.number().min(1).max(120).label("Age").optional().messages({
-    "number.empty": "Age cannot be empty",
-    "number.base": "Age must be a number.",
-    "number.min": "Age must be at least 1.",
-    "number.max": "Age cannot exceed 120.",
-  }),
-
   gender: Joi.string()
     .valid("male", "female", "other")
     .label("Gender")
