@@ -95,6 +95,7 @@ export default {
           "bloodGroup",
           "pan",
           "adhaar",
+          "profileImage",
         ];
 
         Object.keys(updateData).forEach((key) => {
