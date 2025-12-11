@@ -349,7 +349,7 @@ export default {
       if (!user)
         return res.status(404).json({
           status: "error",
-          message: "User not found",
+          message: "Invalid credentials",
           code: "NOT_FOUND",
           details: null,
         });

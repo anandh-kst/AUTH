@@ -69,10 +69,10 @@ paths:
   
   
   
-  ## VERIFY OTP
+  ## REGISTER USER / UPDATE USER
   /user/register:
     post:
-      summary: Create a new user or update user profile
+      summary: Create a new user OR update existing user
       tags: [Auth]
       requestBody:
         required: true
@@ -81,6 +81,7 @@ paths:
             schema:
               oneOf:
                 - type: object
+                  title: CreateUserPayload
                   description: Create new user (email + password only)
                   required:
                     - email
@@ -89,22 +90,24 @@ paths:
                     email:
                       type: string
                       format: email
-                      example: "test@gmail.com"
+                      example: "newuser@gmail.com"
                     password:
                       type: string
                       example: "StrongPass@123"
+  
                 - type: object
-                  description: Update existing user profile (with optional JWT token)
+                  title: UpdateUserPayload
+                  description: Update existing user (JWT token optional)
                   properties:
                     userToken:
                       type: string
-                      description: JWT token for updating profile
+                      description: JWT for updating profile
                     email:
                       type: string
-                      example: "test@gmail.com"
+                      example: "existing@gmail.com"
                     password:
                       type: string
-                      example: "StrongPass@123"
+                      example: "Pass@123"
                     firstName:
                       type: string
                     lastName:
@@ -137,18 +140,19 @@ paths:
                     profileImage:
                       type: string
                       format: binary
+  
       responses:
         "201":
           description: User created successfully
         "200":
           description: User updated successfully
         "400":
-          description: Validation error or missing fields
+          description: Validation error
         "404":
-          description: User or profile not found
+          description: User not found
         "500":
           description: Server error
-
+  
   ## LOGIN USER
   /user/login:
     post:
