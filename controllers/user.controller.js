@@ -433,7 +433,9 @@ export default {
           details: null,
         });
       }
-      const record = await Otp.findOne({ email: updatedDate.email }).sort({ createdAt: -1 });
+      const record = await Otp.findOne({ email: updatedDate.email }).sort({
+        createdAt: -1,
+      });
       if (!record || !record.verified) {
         return res.status(400).json({
           success: "error",

@@ -9,6 +9,8 @@ import { setupSwagger } from "./swagger.js";
 dotenv.config();
 
 const app = express();
+
+// Swagger only runs locally
 setupSwagger(app);
 
 app.use(cors());
@@ -17,20 +19,19 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/user", userRouter);
 app.use("/api/data", dataRouter);
+
 app.get("/", (req, res) => {
   res.send("Health App Server is running");
 });
+
 const PORT = process.env.PORT || 3002;
+
 mongoose
-  .connect(process.env.MONGO_URL, {
-    dbName: process.env.DB_NAME,
-  })
+  .connect(process.env.MONGO_URL, { dbName: process.env.DB_NAME })
   .then(() => {
-    console.log("DB Connection Successfull");
+    console.log("DB Connection Successful");
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
   })
-  .catch((err) => {
-    console.log(err);
-  });
+  .catch((err) => console.log(err));

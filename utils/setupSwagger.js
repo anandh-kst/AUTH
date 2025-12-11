@@ -1,15 +1,9 @@
-import swaggerUi from "swagger-ui-express";
-import YAML from "yamljs";
-import path from "path";
-
-export const setupSwagger = (app) => {
-  // Disable in Vercel
+export const setupSwaggerVercel = (app) => {
   if (process.env.VERCEL) {
-    console.log("Swagger disabled on Vercel");
+    console.log("Running on Vercel → Swagger disabled inside Express");
     return;
   }
 
-  // Disable in production server
   if (process.env.NODE_ENV === "production") {
     console.log("Swagger disabled in production");
     return;
@@ -20,5 +14,5 @@ export const setupSwagger = (app) => {
 
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-  console.log("📄 Swagger available at /api-docs");
+  console.log("📄 Swagger Docs available at /api-docs");
 };
