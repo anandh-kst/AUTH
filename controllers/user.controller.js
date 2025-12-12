@@ -175,9 +175,7 @@ export default {
         html: welcomeEmailTemplate(`${userProfile.email}`),
       });
 
-      const token = jwt.sign({ id: identity._id }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-      });
+      const token = jwt.sign({ id: identity._id }, process.env.JWT_SECRET);
       return res.status(201).json({
         success: "success",
         message: "User created successfully",
@@ -370,9 +368,7 @@ export default {
           details: null,
         });
 
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-      });
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 
       return res.status(200).json({
         status: "success",
